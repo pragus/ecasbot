@@ -18,10 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import re
 import time
 import telebot
 
+from .scorers import ScoreUser
 from .settings import Settings
 
 
@@ -185,28 +185,10 @@ class ASBot:
         return m.chat.type == 'supergroup' and (
                 m.from_user.id in self.__settings.admins or usr.status == 'administrator')
 
-    def __score_user(self, fname, lname) -> int:
-        # Setting default score to 0...
-        score = 0
+    def __score_user(self, user) -> int:
         # Combining first name with last name...
-        username = '{} {}'.format(fname, lname) if lname else fname
-        # Find chinese bots and score them to +100...
-        if re.search(self.__settings.chkrgx, username, re.I | re.M | re.U):
-            score += 100
-        # Score users with URLs in username...
-        if re.search(self.__settings.urlrgx, username, re.I | re.M | re.U):
-            score += 100
-        # Score users with restricted words in username...
-        if any(w in username for w in self.__settings.stopwords):
-            score += 100
-        # Score users with very long usernames...
-        if len(username) > self.__settings.maxname:
-            score += 50
-        # Score users with chinese hieroglyphs...
-        if re.search('[\u4e00-\u9fff]+', username, re.I | re.M | re.U):
-            score += 50
-        # Return result...
-        return score
+        username = '{} {}'.format(user.first_name, user.last_name) if user.last_name else user.first_name
+        return self.__scorer.score(username)
 
     def runbot(self) -> None:
         # Initialize command handlers...
@@ -220,7 +202,7 @@ class ASBot:
         @self.bot.message_handler(func=Msg.is_private_chat, commands=['checkme'])
         def handle_checkme(message):
             try:
-                score = self.__score_user(message.from_user.first_name, message.from_user.last_name)
+                score = self.__score_user(message.from_user)
                 self.bot.send_message(message.chat.id, Messages.Chkme(message.from_user.id, score))
             except:
                 self.__logger.exception(Messages.Pmex())
@@ -278,7 +260,7 @@ class ASBot:
         def handle_join(message):
             try:
                 # Check user profile using our score system...
-                score = self.__score_user(message.new_chat_member.first_name, message.new_chat_member.last_name)
+                score = self.__score_user(message.new_chat_member)
                 self.__logger.info(Messages.Alog(message, score))
                 try:
                     # If user get score >= 100 - ban him, else - restrict...
@@ -325,6 +307,7 @@ class ASBot:
         self.__schema = 1
         self.__logger = logging.getLogger(__name__)
         self.__settings = Settings(self.__schema)
+        self.__scorer = ScoreUser(self.__settings, self.__logger)
         if not self.__settings.tgkey:
             raise Exception(Messages.Notoken())
         self.bot = telebot.TeleBot(self.__settings.tgkey)
