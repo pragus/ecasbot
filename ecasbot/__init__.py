@@ -26,26 +26,95 @@ from .settings import Settings
 
 
 class FmtMsg:
-    def __init__(self, text):
+    def __init__(self, text, extractor=None):
         self.__t = text
+        self.__e = extractor
 
     def __call__(self, *args, **kwargs):
-        return self.__t.format(*args, **kwargs)
+        fmt_args, fmt_kwargs = args, kwargs
+        if self.__e:
+            fmt_args, fmt_kwargs = self.__e(args, kwargs)
+        return self.__t.format(*fmt_args, **fmt_kwargs)
+
+
+class Transformers:
+    Alog = lambda args, kwargs: (
+        (
+            args[0].new_chat_member.first_name,
+            args[0].new_chat_member.id,
+            args[1]
+            ),
+        {}
+        )
+
+    Amsgrm = lambda args, kwargs: (
+        (
+            args[0].from_user.first_name,
+            args[0].from_user.id,
+            args[0].reply_to_message.from_user.first_name,
+            args[0].reply_to_message.from_user.id
+            ),
+        {}
+        )
+
+    MuteBan = lambda args, kwargs: (
+        (
+            args[0].from_user.first_name,
+            args[0].from_user.id,
+            args[1].username,
+            args[1].userid
+            ),
+        {}
+        )
+    Aunres = lambda args, kwargs: (
+        (
+            args[0].from_user.first_name,
+            args[0].from_user.id,
+            args[0].reply_to_message.from_user.first_name,
+            args[0].reply_to_message.from_user.id
+            ),
+        {}
+        )
 
 
 class Messages:
     Welcome = FmtMsg('Add me to supergroup and give me admin rights. I will try to block spammers automatically.')
-    Alog = FmtMsg('New user {} with ID {} has joined group. Score: {}.')
+    Alog = FmtMsg(
+        'New user {} with ID {} has joined group. Score: {}.',
+        Transformers.Alog
+        )
     Restex = FmtMsg('Cannot restrict a new user with ID {} due to missing admin rights.')
     Msgex = FmtMsg('Exception detected while handling spam message from {}.')
     Notoken = FmtMsg('No API token entered. Cannot proceed. Fix this issue and run this bot again!')
     Joinhex = FmtMsg('Failed to handle join message.')
     Banned = FmtMsg('Permanently banned user with ID {} (score: {}).')
-    Msgrest = FmtMsg('Removed message from restricted user {} with ID {}.')
-    Amsgrm = FmtMsg('Admin {} ({}) removed message from user {} with ID {}.')
-    Amute = FmtMsg('Admin {} ({}) permanently muted user {} with ID {}.')
-    Aunres = FmtMsg('Admin {} ({}) removed all restrictions from user {} with ID {}.')
-    Aban = FmtMsg('Admin {} ({}) permanently banned user {} with ID {}.')
+    Msgrest = FmtMsg(
+        'Removed message from restricted user {} with ID {}.',
+        lambda args, kwargs: (
+            (
+                args[0].from_user.first_name,
+                args[0].from_user.id
+                ),
+            {}
+            )
+        )
+
+    Amsgrm = FmtMsg(
+        'Admin {} ({}) removed message from user {} with ID {}.',
+        Transformers.Amsgrm
+        )
+    Amute = FmtMsg(
+        'Admin {} ({}) permanently muted user {} with ID {}.',
+        Transformers.MuteBan
+        )
+    Aunres = FmtMsg(
+        'Admin {} ({}) removed all restrictions from user {} with ID {}.',
+        Transformers.Aunres
+        )
+    Aban = FmtMsg(
+        'Admin {} ({}) permanently banned user {} with ID {}.',
+        Transformers.MuteBan
+        )
     Admerr = FmtMsg('Failed to handle admin command.')
     Chkme = FmtMsg('Checking of account {} successfully completed. Your score is: {}.')
     Pmex = FmtMsg('Failed to handle command in private chat with bot.')
@@ -162,14 +231,7 @@ class ASBot:
                 # Remove reported message...
                 if message.reply_to_message:
                     self.bot.delete_message(message.chat.id, message.reply_to_message.message_id)
-                    self.__logger.warning(
-                        Messages.Amsgrm(
-                            message.from_user.first_name,
-                            message.from_user.id,
-                            message.reply_to_message.from_user.first_name,
-                            message.reply_to_message.from_user.id
-                            )
-                        )
+                    self.__logger.warning(Messages.Amsgrm(message))
             except:
                 self.__logger.exception(Messages.Admerr())
 
@@ -180,14 +242,7 @@ class ASBot:
                     msg = Msg(message, self.__settings)
                     if message.from_user.id != msg.userid:
                         self.bot.kick_chat_member(message.chat.id, msg.userid)
-                        self.__logger.warning(
-                            Messages.Aban(
-                                message.from_user.first_name,
-                                message.from_user.id,
-                                msg.username,
-                                msg.userid
-                                )
-                            )
+                        self.__logger.warning(Messages.Aban(message, msg))
             except:
                 self.__logger.exception(Messages.Admerr())
 
@@ -202,14 +257,7 @@ class ASBot:
                             until_date=int(time.time()),
                             **Perm.Rest
                             )
-                        self.__logger.warning(
-                            Messages.Amute(
-                                message.from_user.first_name,
-                                message.from_user.id,
-                                msg.username,
-                                msg.userid
-                                )
-                            )
+                        self.__logger.warning(Messages.Amute(message, msg))
             except:
                 self.__logger.exception(Messages.Admerr())
 
@@ -222,14 +270,7 @@ class ASBot:
                         message.reply_to_message.from_user.id,
                         **Perm.Unrest
                         )
-                    self.__logger.warning(
-                        Messages.Aunres(
-                            message.from_user.first_name,
-                            message.from_user.id,
-                            message.reply_to_message.from_user.first_name,
-                            message.reply_to_message.from_user.id
-                            )
-                        )
+                    self.__logger.warning(Messages.Aunres(message))
             except:
                 self.__logger.exception(Messages.Admerr())
 
@@ -238,13 +279,7 @@ class ASBot:
             try:
                 # Check user profile using our score system...
                 score = self.__score_user(message.new_chat_member.first_name, message.new_chat_member.last_name)
-                self.__logger.info(
-                    Messages.Alog(
-                        message.new_chat_member.first_name,
-                        message.new_chat_member.id,
-                        score
-                        )
-                    )
+                self.__logger.info(Messages.Alog(message, score))
                 try:
                     # If user get score >= 100 - ban him, else - restrict...
                     if score >= 100:
@@ -278,12 +313,7 @@ class ASBot:
                 # Removing messages from restricted members...
                 if msg.is_forward or not msg.is_entities_ok:
                     self.bot.delete_message(message.chat.id, message.message_id)
-                    self.__logger.info(
-                        Messages.Msgrest(
-                            message.from_user.first_name,
-                            message.from_user.id
-                            )
-                        )
+                    self.__logger.info(Messages.Msgrest(message))
             except Exception:
                 self.__logger.exception(Messages.Msgex(message.from_user.id))
 
