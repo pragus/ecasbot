@@ -85,3 +85,22 @@ class Settings:
         self.__load()
         if not self.__check_schema(schid):
             raise Exception('Schema of JSON config {} is outdated! Fix it.'.format(self.__cfgfile))
+
+
+class Permissions:
+    New = dict(
+        can_send_messages=True,
+        can_send_media_messages=False,
+        can_send_other_messages=False,
+        can_add_web_page_previews=False
+        )
+    Unrest = dict(
+        can_send_messages=True,
+        can_send_media_messages=True,
+        can_send_other_messages=True,
+        can_add_web_page_previews=True
+        )
+    Rest = dict(
+        can_send_messages=False, can_send_media_messages=False, can_send_other_messages=False,
+        can_add_web_page_previews=False
+        )
