@@ -35,16 +35,20 @@ class ASBot:
         return m.chat.type == 'supergroup' and (
                     m.from_user.id in self.__settings.admins or usr.status == 'administrator')
 
-    def __check_private_chat(self, message) -> bool:
+    @staticmethod
+    def __check_private_chat(message) -> bool:
         return message.chat.type == 'private'
 
-    def __get_actual_username(self, message):
+    @staticmethod
+    def __get_actual_username(message):
         return message.reply_to_message.new_chat_member.first_name if message.reply_to_message.new_chat_member else message.reply_to_message.from_user.first_name
 
-    def __get_actual_userid(self, message):
+    @staticmethod
+    def __get_actual_userid(message):
         return message.reply_to_message.new_chat_member.id if message.reply_to_message.new_chat_member else message.reply_to_message.from_user.id
 
-    def __check_message_forward(self, message):
+    @staticmethod
+    def __check_message_forward(message):
         return message.forward_from or message.forward_from_chat
 
     def __check_message_entities(self, message):
