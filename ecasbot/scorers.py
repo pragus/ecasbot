@@ -30,7 +30,7 @@ class ScoreUser(ScoreUserBase):
             return 100
 
     @staticmethod
-    def score_chinese_1(self, username):
+    def score_chinese_1(username):
         # Score users with chinese hieroglyphs...
         if re.search('[\u4e00-\u9fff]+', username, re.I | re.M | re.U):
             return 50
