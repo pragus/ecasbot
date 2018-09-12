@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ecasbot',
-    version='0.1',
+    version='0.2',
     packages=find_packages(),
     package_dir={
         'ecasbot': 'ecasbot',
@@ -33,7 +33,7 @@ setup(
         ],
     },
     license='GPLv3',
-    install_requires=['pytelegrambotapi', 'requests', 'six'],
+    install_requires=['pytelegrambotapi', 'requests', 'six', 'antispam'],
     author='Vitaly Zaitsev',
     author_email='vitaly@easycoding.org',
     description='AntiSpam bot for Telegram by EasyCoding Team'
