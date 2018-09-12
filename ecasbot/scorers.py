@@ -17,7 +17,8 @@ class ScoreUserBase:
         s = 0
         for h in self._score_handlers:
             try:
-                s += getattr(self, h)(username)
+                self.logger.info("Executing score_handler %s", h)
+                s += getattr(self, h)(username) or 0
             except Exception as ex:
                 self.logger.exception(ex)
         return s
