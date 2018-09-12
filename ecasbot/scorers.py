@@ -17,7 +17,7 @@ class ScoreUserBase:
         s = 0
         for h in self._score_handlers:
             try:
-                s += h(username)
+                s += getattr(self, h)(username)
             except Exception as ex:
                 self.logger.exception(ex)
         return s
