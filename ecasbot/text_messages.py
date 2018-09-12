@@ -15,6 +15,7 @@ class Transformers:
         (
             args[0].new_chat_member.first_name,
             args[0].new_chat_member.id,
+            args[0].chat.id,
             args[1]
             ),
         {}
@@ -53,7 +54,7 @@ class Transformers:
 class Messages:
     Welcome = FmtMsg('Add me to supergroup and give me admin rights. I will try to block spammers automatically.')
     Alog = FmtMsg(
-        'New user {} with ID {} has joined group. Score: {}.',
+        'New user {} with ID {} has joined group_id: {}. Score: {}.',
         Transformers.Alog
         )
     Restex = FmtMsg('Cannot restrict a new user with ID {} due to missing admin rights.')
