@@ -60,7 +60,7 @@ class Messages:
     Msgex = FmtMsg('Exception detected while handling spam message from {}.')
     Notoken = FmtMsg('No API token entered. Cannot proceed. Fix this issue and run this bot again!')
     Joinhex = FmtMsg('Failed to handle join message.')
-    Banned = FmtMsg('Permanently banned user with ID {} (score: {}).')
+    Banned = FmtMsg('Permanently banned user_id:{}, in chat_id:{} with score:{}.')
     Msgrest = FmtMsg(
         'Removed message from restricted user {} with ID {}.',
         lambda args, kwargs: (

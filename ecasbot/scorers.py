@@ -17,8 +17,10 @@ class ScoreUserBase:
         s = 0
         for h in self._score_handlers:
             try:
-                self.logger.info("Executing score_handler %s", h)
-                s += getattr(self, h)(username) or 0
+                self.logger.debug("Executing score_handler %s", h)
+                h_score = getattr(self, h)(username) or 0
+                self.logger.debug("Score by %s: %s" % (h, h_score))
+                s += h_score
             except Exception as ex:
                 self.logger.exception(ex)
         return s
@@ -53,4 +55,4 @@ class ScoreUser(ScoreUserBase):
 
     @staticmethod
     def score_bayes(username):
-        return 80*antispam.score(username)
+        return 50*antispam.score(username)

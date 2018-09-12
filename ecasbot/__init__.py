@@ -159,7 +159,7 @@ class ASBot:
                         if message.from_user.id != message.new_chat_member.id:
                             self.bot.kick_chat_member(message.chat.id, message.from_user.id)
                         # Writing information to log...
-                        self.__logger.warning(Messages.Banned(message.new_chat_member.id, score))
+                        self.__logger.warning(Messages.Banned(message.new_chat_member.id, message.chat.id, score))
                     else:
                         # Restrict all new users for specified in config time...
                         self.bot.restrict_chat_member(
