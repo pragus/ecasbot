@@ -1,5 +1,4 @@
 import re
-import antispam
 
 class ScoreUserBase:
     MAGIC_PREFIX = 'score_'
@@ -52,7 +51,3 @@ class ScoreUser(ScoreUserBase):
         # Score users with very long usernames...
         if len(username) > self.settings.maxname:
             return 50
-
-    @staticmethod
-    def score_bayes(username):
-        return 50*antispam.score(username)
